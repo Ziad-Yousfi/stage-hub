@@ -1,0 +1,13 @@
+Django>=4.2
+djangorestframework>=3.14
+django-allauth>=0.54
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+django-import-export>=3.2
+Pillow>=10.0
+python-decouple>=3.8
+psycopg2-binary>=2.9
+WeasyPrint>=59.0
+django-storages>=1.13
+celery>=5.3
+redis>=4.6
