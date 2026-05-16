@@ -84,13 +84,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# Initialize Firebase
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# Initialize Firebase
 firebase_key_path = BASE_DIR / 'firebase-key.json'
+
 if firebase_key_path.exists():
     cred = credentials.Certificate(str(firebase_key_path))
+    firebase_admin.initialize_app(cred)
+    db_firestore = firestore.client()
+elif config('FIREBASE_PROJECT_ID', default=None):
+    # Fallback for production using Env Vars
+    firebase_info = {
+        "type": "service_account",
+        "project_id": config('FIREBASE_PROJECT_ID'),
+        "private_key_id": config('FIREBASE_PRIVATE_KEY_ID'),
+        "private_key": config('FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
+        "client_email": config('FIREBASE_CLIENT_EMAIL'),
+        "client_id": config('FIREBASE_CLIENT_ID'),
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": config('FIREBASE_CLIENT_X509_CERT_URL'),
+    }
+    cred = credentials.Certificate(firebase_info)
     firebase_admin.initialize_app(cred)
     db_firestore = firestore.client()
 else:
