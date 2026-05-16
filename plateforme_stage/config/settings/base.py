@@ -84,6 +84,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# Initialize Firebase
+firebase_key_path = BASE_DIR / 'firebase-key.json'
+if firebase_key_path.exists():
+    cred = credentials.Certificate(str(firebase_key_path))
+    firebase_admin.initialize_app(cred)
+    db_firestore = firestore.client()
+else:
+    db_firestore = None
+
 # Database configuration
 DATABASES = {
     'default': {
