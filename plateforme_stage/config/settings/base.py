@@ -17,6 +17,9 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.railway.app,.netlify.app').split(',')
 
+# Firebase Initialization
+FIREBASE_DB = None
+
 # CSRF Trusted Origins for production
 CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',
@@ -103,7 +106,7 @@ firebase_key_path = BASE_DIR / 'firebase-key.json'
 if firebase_key_path.exists():
     cred = credentials.Certificate(str(firebase_key_path))
     firebase_admin.initialize_app(cred)
-    db_firestore = firestore.client()
+    FIREBASE_DB = firestore.client()
 elif config('FIREBASE_PROJECT_ID', default=None):
     # Fallback for production using Env Vars
     # Nettoyage ultra-robuste avec REGEX pour gérer les sauts de ligne et espaces multiples
@@ -133,9 +136,9 @@ elif config('FIREBASE_PROJECT_ID', default=None):
     }
     cred = credentials.Certificate(firebase_info)
     firebase_admin.initialize_app(cred)
-    db_firestore = firestore.client()
+    FIREBASE_DB = firestore.client()
 else:
-    db_firestore = None
+    FIREBASE_DB = None
 
 # Database configuration
 DATABASES = {

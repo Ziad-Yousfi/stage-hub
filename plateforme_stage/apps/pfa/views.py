@@ -35,11 +35,15 @@ def mon_pfa_view(request):
 def details_pfa_view(request, pfa_id):
     pfa = get_object_or_404(PFA, id=pfa_id)
     from django.conf import settings
-    db = settings.db_firestore
+    db = getattr(settings, 'FIREBASE_DB', None)
     
     # 1. Security Check
-    if request.user.is_etudiant and request.user.etudiant_profile not in pfa.etudiants.all():
-        return redirect('dashboard:home')
+    if request.user.is_etudiant:
+        if request.user.etudiant_profile not in pfa.etudiants.all():
+            return redirect('dashboard:home')
+    elif request.user.is_enseignant:
+        if pfa.encadrant_academique != request.user.enseignant_profile:
+            return redirect('dashboard:home')
         
     # 2. Get Messages from Firestore
     pfa_messages = []
@@ -63,7 +67,7 @@ def details_pfa_view(request, pfa_id):
             }
             db.collection('pfa_messages').add(new_msg)
             
-            # IA Tutor Logic
+            # IA Tutor Logic: Only respond to student
             if request.user.is_etudiant:
                 ai = AIService()
                 pfa_context = {
@@ -73,7 +77,7 @@ def details_pfa_view(request, pfa_id):
                     'etapes': ", ".join([e.titre_etape for e in pfa.etapes.all()])
                 }
                 # Simplify history for AI
-                history = [{'is_user': not m['is_ai'], 'text': m['contenu']} for m in pfa_messages[-5:]]
+                history = [{'is_user': not m.get('is_ai', False), 'text': m.get('contenu', '')} for m in pfa_messages[-5:]]
                 ai_response = ai.get_pfa_tutor_response(pfa_context, contenu, history)
                 
                 # Save AI response to Firestore
