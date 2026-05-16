@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-person-circle"></i> Mon Profil</h2>
+            <p class="text-muted">Gérez vos informations personnelles et votre CV.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <h4 class="mb-3 border-bottom pb-2">Informations Générales</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Prénom</label>
+                                {{ user_form.first_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom</label>
+                                {{ user_form.last_name }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                            <div class="form-text">L'adresse email ne peut pas être modifiée.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Photo de profil</label>
+                            {% if user.photo_profil %}
+                                <div class="mb-2">
+                                    <img src="{{ user.photo_profil.url }}" alt="Photo de profil" class="img-thumbnail" style="height: 100px; width: 100px; object-fit: cover;">
+                                </div>
+                            {% endif %}
+                            {{ user_form.photo_profil }}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Téléphone</label>
+                                {{ user_form.telephone }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Adresse</label>
+                                {{ user_form.adresse }}
+                            </div>
+                        </div>
+
+                        {% if user.is_etudiant and etudiant_form %}
+                            <h4 class="mb-3 mt-4 border-bottom pb-2">Informations Étudiant</h4>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Filière</label>
+                                    {{ etudiant_form.filiere }}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Niveau d'études</label>
+                                    {{ etudiant_form.niveau }}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Numéro Étudiant</label>
+                                <input type="text" class="form-control" value="{{ user.etudiant_profile.numero_etudiant }}" disabled>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-primary"><i class="bi bi-file-earmark-pdf"></i> Curriculum Vitae (CV)</label>
+                                {% if user.etudiant_profile.cv %}
+                                    <div class="mb-2">
+                                        <a href="{{ user.etudiant_profile.cv.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Voir le CV actuel
+                                        </a>
+                                    </div>
+                                {% endif %}
+                                {{ etudiant_form.cv }}
+                                <div class="form-text">Format PDF uniquement.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Lettre de motivation par défaut</label>
+                                {{ etudiant_form.lettre_motivation }}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-save"></i> Enregistrer les modifications
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

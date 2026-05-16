@@ -401,3 +401,39 @@ class DocumentPFA(models.Model):
     
     def __str__(self):
         return f"{self.titre} (v{self.version}) - {self.pfa.titre_pfa}"
+
+class MessagePFA(models.Model):
+    """
+    Model for discussion messages between a student and their supervisor on a PFA project.
+    """
+    
+    pfa = models.ForeignKey(
+        PFA,
+        on_delete=models.CASCADE,
+        related_name='messages',
+        verbose_name='Project'
+    )
+    
+    auteur = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='messages_pfa',
+        verbose_name='Author'
+    )
+    
+    contenu = models.TextField(
+        verbose_name='Content'
+    )
+    
+    date_envoi = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Sent Date'
+    )
+    
+    class Meta:
+        verbose_name = 'PFA Message'
+        verbose_name_plural = 'PFA Messages'
+        ordering = ['date_envoi']
+    
+    def __str__(self):
+        return f"Message from {self.auteur.email} on {self.pfa.titre_pfa}"

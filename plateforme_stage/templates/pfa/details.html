@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon PFA | {{ pfa.titre_pfa }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in">
+    <!-- Header Section -->
+    <div class="row mb-5 align-items-end">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}" class="text-decoration-none">Tableau de bord</a></li>
+                    <li class="breadcrumb-item active">Mon PFA</li>
+                </ol>
+            </nav>
+            <h1 class="fw-bold text-dark mb-2 display-6">{{ pfa.titre_pfa }}</h1>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge bg-primary px-3 shadow-sm">{{ pfa.domaine }}</span>
+                <span class="badge bg-white text-dark border px-3 shadow-sm">Semestre {{ pfa.semestre }}</span>
+                <span class="badge bg-white text-dark border px-3 shadow-sm">Année {{ pfa.annee_academique }}</span>
+                {% if pfa.statut == 'EN_COURS' %}
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3">En cours</span>
+                {% else %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3">{{ pfa.get_statut_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-white bg-white border">
+                    <i class="bi bi-file-earmark-pdf me-2"></i> Rapport
+                </button>
+                {% if pfa.code_source_url %}
+                    <a href="{{ pfa.code_source_url }}" target="_blank" class="btn btn-dark">
+                        <i class="bi bi-github me-2"></i> GitHub
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Column: Info & Discussion -->
+        <div class="col-lg-8">
+            <!-- Project Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Détails du projet</h5>
+                        <i class="bi bi-journal-text text-primary fs-5"></i>
+                    </div>
+                </div>
+                <div class="card-body py-4">
+                    <h6 class="text-uppercase small fw-bold text-muted mb-3">Objectifs & Description</h6>
+                    <p class="card-text text-muted mb-4" style="line-height: 1.8; font-size: 1.05rem;">
+                        {{ pfa.description }}
+                    </p>
+                    
+                    {% if pfa.mots_cles %}
+                        <h6 class="text-uppercase small fw-bold text-muted mb-3">Mots-clés</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for tag in pfa.mots_cles.split %}
+                                <span class="badge bg-light text-muted border-0 px-3 py-2 fw-medium">#{{ tag|cut:"," }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Discussion Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">Tutorat avec le Professeur IA</h5>
+                        <span class="badge bg-primary rounded-pill">{{ pfa_messages.count }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="message-container" id="chat-box" style="height: 500px; background-color: #f1f5f9; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
+                        {% for message in pfa_messages %}
+                            <div class="message {% if message.auteur == user %}message-sent{% else %}message-received{% endif %} animate-fade-in">
+                                <div class="small fw-bold mb-1 d-flex align-items-center gap-2">
+                                    {% if message.auteur == user %}
+                                        <span class="badge bg-white text-primary border shadow-sm">Moi</span>
+                                    {% else %}
+                                        <span class="badge bg-primary shadow-sm"><i class="bi bi-mortarboard-fill me-1"></i> Professeur IA</span>
+                                    {% endif %}
+                                    <span class="opacity-50" style="font-weight: 400; font-size: 0.7rem;">{{ message.date_envoi|time:"H:i" }}</span>
+                                </div>
+                                <div class="message-content shadow-sm p-3 rounded-4 mt-1" style="font-size: 0.95rem; line-height: 1.5;">
+                                    {{ message.contenu|linebreaksbr }}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-5 my-5">
+                                <div class="bg-white rounded-circle shadow-sm d-inline-flex p-4 mb-3 border">
+                                    <i class="bi bi-chat-left-dots text-primary fs-1"></i>
+                                </div>
+                                <h5 class="fw-bold">Votre Tuteur IA est prêt</h5>
+                                <p class="text-muted small px-5">Posez vos questions sur l'architecture, le code ou la méthodologie de votre PFA.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white p-4 border-top-0">
+                    <form method="POST" action="{% url 'pfa:details_pfa' pfa.id %}">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="contenu" class="form-control bg-light border-0 shadow-none px-4" placeholder="Votre message..." required autocomplete="off">
+                            <button class="btn btn-primary px-4" type="submit">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Team & Progress -->
+        <div class="col-lg-4">
+            <!-- Team Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">L'Équipe</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for etudiant in pfa.etudiants.all %}
+                            <div class="list-group-item px-4 py-3 d-flex align-items-center border-0">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                    <i class="bi bi-person-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ etudiant.user.get_full_name }}</div>
+                                    <div class="text-muted small">{{ etudiant.filiere }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supervisor Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">Encadrement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <i class="bi bi-mortarboard-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="small text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Encadrant Académique</div>
+                            <div class="fw-bold text-dark">
+                                {% if pfa.encadrant_academique %}
+                                    {{ pfa.encadrant_academique.user.get_full_name }}
+                                {% else %}
+                                    Non assigné
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if pfa.encadrant_industriel_nom %}
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 text-info rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                <i class="bi bi-briefcase-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="small text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Tuteur Industriel</div>
+                                <div class="fw-bold text-dark">{{ pfa.encadrant_industriel_nom }}</div>
+                                <div class="text-muted small">{{ pfa.encadrant_industriel_entreprise }}</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Progress/Timeline -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Jalons</h5>
+                    <i class="bi bi-calendar-check text-success"></i>
+                </div>
+                <div class="card-body">
+                    <div class="timeline ps-3">
+                        {% for etape in pfa.etapes.all %}
+                            <div class="timeline-item pb-4">
+                                <div class="fw-bold text-dark small">{{ etape.titre_etape }}</div>
+                                <div class="text-muted small mb-2">{{ etape.date_fin_prevue|date:"d M Y" }}</div>
+                                {% if etape.statut == 'TERMINE' %}
+                                    <span class="badge bg-success-subtle text-success border-0 px-2 py-1" style="font-size: 0.7rem;">
+                                        <i class="bi bi-check2 me-1"></i> Terminé
+                                    </span>
+                                {% elif etape.statut == 'EN_COURS' %}
+                                    <span class="badge bg-primary-subtle text-primary border-0 px-2 py-1" style="font-size: 0.7rem;">
+                                        <i class="bi bi-play-fill me-1"></i> En cours
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border-0 px-2 py-1" style="font-size: 0.7rem;">
+                                        À faire
+                                    </span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if not pfa.etapes.all %}
+                        <div class="text-center py-3 text-muted">
+                            <small>Aucune étape définie.</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var chatBox = document.getElementById("chat-box");
+        if (chatBox) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    });
+</script>
+
+<style>
+    .ls-1 { letter-spacing: 0.05rem; }
+    .message-content { word-break: break-word; }
+    .breadcrumb-item + .breadcrumb-item::before { content: "•"; color: #cbd5e1; }
+</style>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Candidatures | Stage Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 fw-bold text-dark mb-1">
+                <i class="bi bi-file-earmark-person text-primary me-2"></i> Mes Candidatures
+            </h1>
+            <p class="text-muted mb-0">Suivez en temps réel l'état d'avancement de vos demandes de stage.</p>
+        </div>
+        <a href="{% url 'offres:liste_offres' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i> Nouvelle candidature
+        </a>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                    <i class="bi bi-send"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ candidatures.count }}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value">
+                        {% with accepted=candidatures|dictsort:"statut" %}
+                            {# Note: logic for counting in template is limited, normally done in view #}
+                            {{ candidatures.count }} 
+                        {% endwith %}
+                    </div>
+                    <div class="stat-label">Actives</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            {% if candidatures %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted text-uppercase small fw-bold">
+                            <tr>
+                                <th class="px-4 py-3">Entreprise & Offre</th>
+                                <th class="py-3">Date d'envoi</th>
+                                <th class="py-3">Statut actuel</th>
+                                <th class="px-4 py-3 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidature in candidatures %}
+                                <tr>
+                                    <td class="px-4 py-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                                <i class="bi bi-building fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">{{ candidature.offre.entreprise.nom_entreprise }}</h6>
+                                                <small class="text-primary">{{ candidature.offre.titre }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4">
+                                        <div class="d-flex flex-column">
+                                            <span class="text-dark">{{ candidature.date_candidature|date:"d F Y" }}</span>
+                                            <small class="text-muted">{{ candidature.date_candidature|time:"H:i" }}</small>
+                                        </div>
+                                    </td>
+                                    <td class="py-4">
+                                        {% if candidature.statut == 'SOUMISE' or candidature.statut == 'EN_ATTENTE' %}
+                                            <span class="badge bg-info bg-opacity-10 text-info px-3">En attente</span>
+                                        {% elif candidature.statut == 'VUE' %}
+                                            <span class="badge bg-primary bg-opacity-10 text-primary px-3">Consultée</span>
+                                        {% elif candidature.statut == 'ENTRETIEN' %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning px-3">Entretien</span>
+                                        {% elif candidature.statut == 'ACCEPTEE' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success px-3">Acceptée</span>
+                                        {% elif candidature.statut == 'REFUSEE' %}
+                                            <span class="badge bg-danger bg-opacity-10 text-danger px-3">Refusée</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary px-3">{{ candidature.get_statut_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-4 text-end">
+                                        <button class="btn btn-sm btn-light border" title="Voir les détails">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light border text-danger" title="Retirer la candidature">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-journal-x display-1 text-light"></i>
+                    </div>
+                    <h4 class="fw-bold">Aucune candidature</h4>
+                    <p class="text-muted mx-auto" style="max-width: 400px;">
+                        Vous n'avez pas encore postulé à des offres de stage. 
+                        Commencez par parcourir les offres disponibles pour trouver celle qui vous correspond.
+                    </p>
+                    <a href="{% url 'offres:liste_offres' %}" class="btn btn-primary mt-3 px-4">
+                        <i class="bi bi-search me-2"></i> Voir les offres
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

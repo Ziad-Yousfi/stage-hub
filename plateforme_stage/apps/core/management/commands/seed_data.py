@@ -9,7 +9,7 @@ from datetime import timedelta
 from apps.core.models import UserRole, StageType, AcademicLevel
 from apps.accounts.models import UserProfile, Etudiant, Entreprise, Enseignant
 from apps.offres.models import Competence, Filiere, OffreStage
-from apps.pfa.models import PFA, EtapePFA
+from apps.pfa.models import PFA, EtapePFA, MessagePFA
 
 
 class Command(BaseCommand):
@@ -64,6 +64,7 @@ class Command(BaseCommand):
         admin, created = UserProfile.objects.get_or_create(
             email='admin@platform.com',
             defaults={
+                'username': 'admin',
                 'first_name': 'Admin',
                 'last_name': 'User',
                 'role': UserRole.ADMIN,
@@ -87,6 +88,7 @@ class Command(BaseCommand):
             user, created = UserProfile.objects.get_or_create(
                 email=email,
                 defaults={
+                    'username': email.split('@')[0],
                     'first_name': first_name,
                     'last_name': last_name,
                     'role': UserRole.ETUDIANT,
@@ -119,6 +121,7 @@ class Command(BaseCommand):
             user, created = UserProfile.objects.get_or_create(
                 email=email,
                 defaults={
+                    'username': email.split('@')[0],
                     'first_name': nom,
                     'last_name': 'Representative',
                     'role': UserRole.ENTREPRISE,
@@ -152,6 +155,7 @@ class Command(BaseCommand):
             user, created = UserProfile.objects.get_or_create(
                 email=email,
                 defaults={
+                    'username': email.split('@')[0],
                     'first_name': first_name,
                     'last_name': last_name,
                     'role': UserRole.ENSEIGNANT,
@@ -222,13 +226,15 @@ class Command(BaseCommand):
         ]
         
         for i, data in enumerate(offre_data):
+            # Assign entreprise before creating
+            entreprise = companies[i % len(companies)]
+            data['entreprise'] = entreprise
+            
             offre, created = OffreStage.objects.get_or_create(
                 titre=data['titre'],
                 defaults=data
             )
             if created:
-                offre.entreprise = companies[i % len(companies)]
-                offre.save()
                 
                 # Add competencies
                 competences = list(Competence.objects.all()[:3])
@@ -292,6 +298,26 @@ class Command(BaseCommand):
                         **step_data
                     )
         
+        # Create sample PFA messages (Discussions)
+        self.stdout.write('Creating sample PFA discussions...')
+        for pfa in PFA.objects.all():
+            if pfa.etudiants.exists() and pfa.encadrant_academique:
+                etudiant_user = pfa.etudiants.first().user
+                prof_user = pfa.encadrant_academique.user
+                
+                # Student message
+                MessagePFA.objects.create(
+                    pfa=pfa,
+                    auteur=etudiant_user,
+                    contenu=f"Bonjour M. {prof_user.last_name}, j'ai bien avancé sur la première étape. Pouvons-nous valider le diagramme de classe ?"
+                )
+                # Prof message
+                MessagePFA.objects.create(
+                    pfa=pfa,
+                    auteur=prof_user,
+                    contenu=f"Bonjour {etudiant_user.first_name}. Oui, j'ai vu le document. Il y a quelques corrections à faire sur les cardinalités. On en parle demain."
+                )
+
         self.stdout.write(self.style.SUCCESS('Successfully seeded the database!'))
         self.stdout.write('')
         self.stdout.write('Sample credentials:')

@@ -3,7 +3,6 @@ Core app - Shared models, utilities, and mixins for the internship management pl
 """
 
 from django.db import models
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 
 
@@ -84,6 +83,8 @@ class TaskStatus(models.TextChoices):
 # =============================================================================
 # MIXINS FOR ROLE-BASED ACCESS CONTROL
 # =============================================================================
+
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 class RoleRequiredMixin(UserPassesTestMixin):
     """

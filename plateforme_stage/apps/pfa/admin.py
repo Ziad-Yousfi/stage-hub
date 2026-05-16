@@ -77,7 +77,7 @@ class EtapePFAAdmin(ImportExportModelAdmin):
         'titre_etape', 'pfa', 'statut', 'priorite',
         'date_debut_prevue', 'date_fin_prevue', 'is_retard'
     )
-    list_filter = ('statut', 'priorite', 'is_retard')
+    list_filter = ('statut', 'priorite')
     search_fields = ('titre_etape', 'pfa__titre_pfa')
     ordering = ('ordre', 'date_debut_prevue')
     

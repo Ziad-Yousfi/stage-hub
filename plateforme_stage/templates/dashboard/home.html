@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tableau de Bord | Stage Hub{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in">
+    <div class="row mb-5">
+        <div class="col-12">
+            <h1 class="fw-bold text-dark mb-1">Bienvenue, {{ user.get_full_name|default:user.username }} !</h1>
+            <p class="text-muted">Voici un aperçu de votre activité sur la plateforme.</p>
+        </div>
+    </div>
+
+    {% if profile_missing %}
+        <div class="alert alert-warning border-0 shadow-sm p-4 mb-5">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-2 me-4 text-warning"></i>
+                <div>
+                    <h5 class="fw-bold mb-1">Profil incomplet</h5>
+                    <p class="mb-2">Certaines fonctionnalités sont limitées car votre profil étudiant n'est pas encore configuré.</p>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-warning btn-sm fw-bold px-4">Compléter mon profil</a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row g-4 mb-5">
+        {% if user.is_etudiant %}
+            <!-- Stats Étudiant -->
+            <div class="col-md-4">
+                <a href="{% url 'candidatures:mes_candidatures' %}" class="text-decoration-none">
+                    <div class="stat-card card-hover h-100">
+                        <div class="stat-icon" style="background: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value text-dark">{{ candidatures_count|default:0 }}</div>
+                            <div class="stat-label">Candidatures</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'pfa:mon_pfa' %}" class="text-decoration-none">
+                    <div class="stat-card card-hover h-100">
+                        <div class="stat-icon" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
+                            <i class="bi bi-projector"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value text-dark">{% if pfa %}1{% else %}0{% endif %}</div>
+                            <div class="stat-label">Projet PFA</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'notifications:liste' %}" class="text-decoration-none">
+                    <div class="stat-card card-hover h-100">
+                        <div class="stat-icon" style="background: rgba(255, 193, 7, 0.1); color: #ffc107;">
+                            <i class="bi bi-bell"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value text-dark">{{ unread_notifications_count|default:0 }}</div>
+                            <div class="stat-label">Notifications</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Offres de stage récentes</h5>
+                    <a href="{% url 'offres:liste_offres' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Tout voir</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for offre in recent_offers %}
+                            <div class="list-group-item px-4 py-4 border-0 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">{{ offre.titre }}</h6>
+                                        <p class="text-primary small mb-0 fw-medium">
+                                            <i class="bi bi-building me-1"></i> {{ offre.entreprise.nom_entreprise }}
+                                        </p>
+                                    </div>
+                                    <span class="badge bg-light text-muted border-0">{{ offre.date_publication|timesince }}</span>
+                                </div>
+                                <div class="d-flex gap-3 text-muted small">
+                                    <span><i class="bi bi-geo-alt me-1"></i> {{ offre.localisation }}</span>
+                                    <span><i class="bi bi-clock me-1"></i> {{ offre.duree_semaines }} semaines</span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-5">
+                                <p class="text-muted">Aucune offre disponible pour le moment.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100 bg-primary text-white overflow-hidden">
+                <div class="card-body p-4 position-relative" style="z-index: 1;">
+                    <h5 class="fw-bold mb-4">Besoin d'aide ?</h5>
+                    <p class="opacity-75 mb-4">Consultez notre guide d'utilisation ou contactez l'administration pour toute question concernant vos stages ou votre PFA.</p>
+                    <a href="#" class="btn btn-white bg-white text-primary fw-bold px-4 py-2 border-0 shadow-sm">
+                        Consulter le guide
+                    </a>
+                </div>
+                <!-- Abstract visual element -->
+                <div class="position-absolute bottom-0 end-0 p-3 opacity-10" style="font-size: 10rem; transform: translate(20%, 20%);">
+                    <i class="bi bi-rocket-takeoff"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

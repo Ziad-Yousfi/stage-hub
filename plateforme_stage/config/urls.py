@@ -13,6 +13,7 @@ urlpatterns = [
     
     # Django Allauth authentication
     path('accounts/', include('allauth.urls')),
+    path('accounts/profile/', include('apps.accounts.urls', namespace='accounts')),
     
     # App URLs
     path('', include('apps.dashboard.urls', namespace='dashboard')),

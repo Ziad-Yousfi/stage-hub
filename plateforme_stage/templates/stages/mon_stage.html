@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon Stage | {{ stage.sujet_stage }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate-fade-in">
+    <div class="row mb-5 align-items-end">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}" class="text-decoration-none">Tableau de bord</a></li>
+                    <li class="breadcrumb-item active">Mon Stage</li>
+                </ol>
+            </nav>
+            <h1 class="fw-bold text-dark mb-2 display-6">{{ stage.sujet_stage }}</h1>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge bg-primary px-3 shadow-sm">{{ stage.entreprise.nom_entreprise }}</span>
+                <span class="badge bg-white text-dark border px-3 shadow-sm">Du {{ stage.date_debut|date:"d M" }} au {{ stage.date_fin_prevue|date:"d M Y" }}</span>
+                {% if stage.statut == 'EN_COURS' %}
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3">Actif</span>
+                {% else %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3">{{ stage.get_statut_display }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-white bg-white border">
+                    <i class="bi bi-file-earmark-text me-2"></i> Convention
+                </button>
+                <button class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i> Nouveau Rapport
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Details Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">Objectifs du stage</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted" style="line-height: 1.8;">{{ stage.objectifs }}</p>
+                </div>
+            </div>
+
+            <!-- Weekly Reports -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Rapports de suivi</h5>
+                    <span class="badge bg-light text-primary border-0">{{ rapports.count }} rapports</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small fw-bold">
+                                <tr>
+                                    <th class="px-4 py-3">Semaine</th>
+                                    <th class="py-3">Date</th>
+                                    <th class="py-3">Avancement</th>
+                                    <th class="py-3">Statut</th>
+                                    <th class="px-4 py-3 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rapport in rapports %}
+                                    <tr>
+                                        <td class="px-4 py-4 fw-bold">Semaine {{ rapport.semaine_numero }}</td>
+                                        <td class="py-4 text-muted">{{ rapport.date_rapport|date:"d M Y" }}</td>
+                                        <td class="py-4">
+                                            <div class="progress" style="height: 6px; width: 100px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ rapport.avancement }}%"></div>
+                                            </div>
+                                            <small class="text-muted mt-1 d-block">{{ rapport.avancement }}%</small>
+                                        </td>
+                                        <td class="py-4">
+                                            {% if rapport.valide_par_enseignant %}
+                                                <span class="badge bg-success bg-opacity-10 text-success px-3">Validé</span>
+                                            {% else %}
+                                                <span class="badge bg-warning bg-opacity-10 text-warning px-3">En attente</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-4 py-4 text-end">
+                                            <button class="btn btn-sm btn-light border"><i class="bi bi-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="bi bi-journal-x display-4 opacity-25 d-block mb-3"></i>
+                                            Aucun rapport soumis pour le moment.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Supervision Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">Encadrement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <i class="bi bi-mortarboard-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="small text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Encadrant Académique</div>
+                            <div class="fw-bold text-dark">{{ stage.enseignant_encadrant.user.get_full_name }}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <i class="bi bi-building-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="small text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Entreprise d'accueil</div>
+                            <div class="fw-bold text-dark">{{ stage.entreprise.nom_entreprise }}</div>
+                            <div class="text-muted small">{{ stage.entreprise.ville }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0">Documents finaux</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Rapport final</label>
+                        {% if stage.rapport_final %}
+                            <div class="d-flex align-items-center p-2 border rounded">
+                                <i class="bi bi-file-earmark-pdf text-danger fs-4 me-2"></i>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="text-truncate small fw-bold">Rapport_Final.pdf</div>
+                                </div>
+                                <button class="btn btn-sm btn-light border-0"><i class="bi bi-download"></i></button>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3 border border-dashed rounded bg-light">
+                                <p class="small text-muted mb-2">Aucun rapport déposé</p>
+                                <button class="btn btn-sm btn-outline-primary px-3">Déposer</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
