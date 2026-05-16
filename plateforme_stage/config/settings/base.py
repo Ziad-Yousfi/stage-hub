@@ -132,18 +132,10 @@ elif config('FIREBASE_PROJECT_ID', default=None):
         "client_x509_cert_url": config('FIREBASE_CLIENT_X509_CERT_URL'),
     }
     cred = credentials.Certificate(firebase_info)
-    firebase_admin.initialize_app(cred, {
-        'storageBucket': f"{config('FIREBASE_PROJECT_ID')}.firebasestorage.app"
-    })
+    firebase_admin.initialize_app(cred)
     db_firestore = firestore.client()
 else:
     db_firestore = None
-
-# Cloud Storage Configuration (Firebase)
-GS_BUCKET_NAME = f"{config('FIREBASE_PROJECT_ID', default='internship-and-pfa')}.firebasestorage.app"
-DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-GS_CREDENTIALS = cred if 'cred' in locals() else None
-GS_QUERYSTRING_AUTH = False # Make files publically readable if needed, or True for signed URLs
 
 # Database configuration
 DATABASES = {

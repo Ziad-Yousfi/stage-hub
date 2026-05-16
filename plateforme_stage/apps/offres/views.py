@@ -47,17 +47,22 @@ def matching_ia_view(request):
         return redirect('dashboard:home')
         
     etudiant = request.user.etudiant_profile
-    if not etudiant.cv:
+    ai = AIService()
+    cv_text = ""
+
+    # 1. Extract text from CV (Database Binary First, then Local Path fallback)
+    if etudiant.cv_binary:
+        import io
+        cv_stream = io.BytesIO(etudiant.cv_binary)
+        cv_text = ai.extract_text_from_pdf(cv_stream)
+    elif etudiant.cv:
+        try:
+            cv_text = ai.extract_text_from_pdf(etudiant.cv.path)
+        except Exception: pass
+        
+    if not cv_text:
         messages.warning(request, "Veuillez d'abord uploader votre CV dans votre profil pour utiliser le matching IA.")
         return redirect('accounts:profile')
-        
-    ai = AIService()
-    
-    # 1. Extract text from CV
-    cv_text = ai.extract_text_from_pdf(etudiant.cv.path)
-    if not cv_text:
-        messages.error(request, "Impossible de lire votre CV. Assurez-vous qu'il s'agit d'un PDF valide.")
-        return redirect('offres:liste_offres')
         
     # 2. Collect ALL offers (Local + External)
     local_offres = OffreStage.objects.filter(statut='PUBLIEE')

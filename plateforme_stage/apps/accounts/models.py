@@ -117,6 +117,19 @@ class Etudiant(models.Model):
         verbose_name='CV (PDF)'
     )
     
+    cv_binary = models.BinaryField(
+        null=True, 
+        blank=True,
+        verbose_name='CV Content (Binary)'
+    )
+    
+    cv_filename = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name='CV Filename'
+    )
+    
     lettre_motivation = models.TextField(
         null=True,
         blank=True,

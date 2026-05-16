@@ -19,7 +19,13 @@ def profile_update_view(request):
             etudiant_form = EtudiantProfileForm(request.POST, request.FILES, instance=user.etudiant_profile)
             if user_form.is_valid() and etudiant_form.is_valid():
                 user_form.save()
-                etudiant_form.save()
+                etudiant = etudiant_form.save(commit=False)
+                # Save CV to database as binary if uploaded
+                if 'cv' in request.FILES:
+                    cv_file = request.FILES['cv']
+                    etudiant.cv_binary = cv_file.read()
+                    etudiant.cv_filename = cv_file.name
+                etudiant.save()
                 messages.success(request, 'Votre profil a été mis à jour avec succès.')
                 return redirect('accounts:profile')
         else:
