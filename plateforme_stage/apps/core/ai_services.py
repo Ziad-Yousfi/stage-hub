@@ -42,20 +42,23 @@ class AIService:
         ])
         
         prompt = f"""
-        Tu es un expert en recrutement. Analyse le CV suivant et sélectionne les 3 meilleures offres de stage parmi la liste fournie.
+        Tu es un expert en recrutement international. Analyse le CV de l'étudiant et sélectionne les 3 meilleures offres de stage parmi la liste fournie.
         
-        CV de l'étudiant:
+        CV DE L'ÉTUDIANT:
         ---
         {cv_text}
         ---
         
-        Liste des offres disponibles:
+        LISTE DES OFFRES (Contient des offres Locales et Internationales):
         ---
         {offers_context}
         ---
         
-        Réponds uniquement au format JSON suivant (liste d'IDs triés par pertinence):
-        {{"best_matches": [id1, id2, id3], "explanation": "Bref résumé du pourquoi"}}
+        CONSIGNES:
+        1. Compare les langages, frameworks et outils du CV avec les missions des offres.
+        2. Sélectionne EXACTEMENT 3 IDs (ou moins s'il n'y a vraiment aucune correspondance).
+        3. Réponds uniquement au format JSON:
+        {{"best_matches": ["ID1", "ID2", "ID3"], "explanation": "Une explication personnalisée de 2-3 phrases en français sur pourquoi ces offres correspondent au profil de l'étudiant."}}
         """
         
         try:
