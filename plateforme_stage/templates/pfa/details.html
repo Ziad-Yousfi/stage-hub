@@ -79,12 +79,12 @@
                 <div class="card-body p-0">
                     <div class="message-container" id="chat-box" style="height: 500px; background-color: #f1f5f9; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
                         {% for message in pfa_messages %}
-                            <div class="message {% if message.auteur == user %}message-sent{% else %}message-received{% endif %} animate-fade-in">
+                            <div class="message {% if not message.is_ai %}message-sent{% else %}message-received{% endif %} animate-fade-in">
                                 <div class="small fw-bold mb-1 d-flex align-items-center gap-2">
-                                    {% if message.auteur == user %}
+                                    {% if not message.is_ai %}
                                         <span class="badge bg-white text-primary border shadow-sm">Moi</span>
                                     {% else %}
-                                        <span class="badge bg-primary shadow-sm"><i class="bi bi-mortarboard-fill me-1"></i> Professeur IA</span>
+                                        <span class="badge bg-primary shadow-sm"><i class="bi bi-mortarboard-fill me-1"></i> {{ message.auteur_name }}</span>
                                     {% endif %}
                                     <span class="opacity-50" style="font-weight: 400; font-size: 0.7rem;">{{ message.date_envoi|time:"H:i" }}</span>
                                 </div>

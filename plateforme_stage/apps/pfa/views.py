@@ -34,67 +34,63 @@ def mon_pfa_view(request):
 @login_required
 def details_pfa_view(request, pfa_id):
     pfa = get_object_or_404(PFA, id=pfa_id)
+    from django.conf import settings
+    db = settings.db_firestore
     
-    # Simple security check
+    # 1. Security Check
     if request.user.is_etudiant and request.user.etudiant_profile not in pfa.etudiants.all():
         return redirect('dashboard:home')
-    if request.user.is_enseignant and pfa.encadrant_academique != request.user.enseignant_profile:
-        return redirect('dashboard:home')
         
-    messages_pfa = pfa.messages.all().order_by('date_envoi')
-    
+    # 2. Get Messages from Firestore
+    pfa_messages = []
+    if db:
+        docs = db.collection('pfa_messages').where('pfa_id', '==', pfa.id).order_by('date_envoi').stream()
+        for doc in docs:
+            pfa_messages.append(doc.to_dict())
+
     if request.method == 'POST':
         contenu = request.POST.get('contenu')
-        if contenu:
-            # Save student message
-            MessagePFA.objects.create(
-                pfa=pfa,
-                auteur=request.user,
-                contenu=contenu
-            )
+        if contenu and db:
+            import datetime
+            # Save student message to Firestore
+            new_msg = {
+                'pfa_id': pfa.id,
+                'auteur_email': request.user.email,
+                'auteur_name': request.user.get_full_name() or request.user.username,
+                'is_ai': False,
+                'contenu': contenu,
+                'date_envoi': datetime.datetime.now()
+            }
+            db.collection('pfa_messages').add(new_msg)
             
-            # IA Tutor Logic: Generate response if it's a student messaging
+            # IA Tutor Logic
             if request.user.is_etudiant:
                 ai = AIService()
-                
-                # Build context for AI
                 pfa_context = {
                     'titre': pfa.titre_pfa,
                     'description': pfa.description,
                     'domaine': pfa.domaine,
                     'etapes': ", ".join([e.titre_etape for e in pfa.etapes.all()])
                 }
-                
-                # Get last 10 messages for history
-                history = [
-                    {'is_user': m.auteur == request.user, 'text': m.contenu}
-                    for m in messages_pfa.order_by('-date_envoi')[:10][::-1]
-                ]
-                
+                # Simplify history for AI
+                history = [{'is_user': not m['is_ai'], 'text': m['contenu']} for m in pfa_messages[-5:]]
                 ai_response = ai.get_pfa_tutor_response(pfa_context, contenu, history)
                 
-                # Get or Create AI User (system user)
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-                ai_user, _ = User.objects.get_or_create(
-                    email="ai.tutor@emsi.ma",
-                    defaults={
-                        'username': 'AI_Tutor', 
-                        'first_name': 'Professeur', 
-                        'last_name': 'IA (Expert EMSI)'
-                    }
-                )
-                
-                MessagePFA.objects.create(
-                    pfa=pfa,
-                    auteur=ai_user,
-                    contenu=ai_response
-                )
+                # Save AI response to Firestore
+                ai_msg = {
+                    'pfa_id': pfa.id,
+                    'auteur_email': 'ai.tutor@emsi.ma',
+                    'auteur_name': 'Professeur IA (Expert EMSI)',
+                    'is_ai': True,
+                    'contenu': ai_response,
+                    'date_envoi': datetime.datetime.now()
+                }
+                db.collection('pfa_messages').add(ai_msg)
             
             return redirect('pfa:details_pfa', pfa_id=pfa.id)
             
     context = {
         'pfa': pfa,
-        'pfa_messages': messages_pfa,
+        'pfa_messages': pfa_messages,
     }
     return render(request, 'pfa/details.html', context)
