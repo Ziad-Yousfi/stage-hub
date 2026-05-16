@@ -96,10 +96,14 @@ if firebase_key_path.exists():
     db_firestore = firestore.client()
 elif config('FIREBASE_PROJECT_ID', default=None):
     # Fallback for production using Env Vars
-    # Nettoyage robuste de la clé privée
+    # Nettoyage ultra-robuste pour gérer les sauts de ligne physiques et les guillemets
     private_key = config('FIREBASE_PRIVATE_KEY').strip()
     if private_key.startswith('"') and private_key.endswith('"'):
         private_key = private_key[1:-1]
+    
+    # Étape cruciale : Supprimer les vrais retours à la ligne qui cassent le PEM
+    private_key = private_key.replace('\n', '').replace('\r', '').strip()
+    # Rétablir les vrais sauts de ligne du format PEM via les séquences \n
     private_key = private_key.replace('\\n', '\n')
     
     firebase_info = {
