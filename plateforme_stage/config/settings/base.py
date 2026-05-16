@@ -96,11 +96,17 @@ if firebase_key_path.exists():
     db_firestore = firestore.client()
 elif config('FIREBASE_PROJECT_ID', default=None):
     # Fallback for production using Env Vars
+    # Nettoyage robuste de la clé privée
+    private_key = config('FIREBASE_PRIVATE_KEY').strip()
+    if private_key.startswith('"') and private_key.endswith('"'):
+        private_key = private_key[1:-1]
+    private_key = private_key.replace('\\n', '\n')
+    
     firebase_info = {
         "type": "service_account",
         "project_id": config('FIREBASE_PROJECT_ID'),
         "private_key_id": config('FIREBASE_PRIVATE_KEY_ID'),
-        "private_key": config('FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
+        "private_key": private_key,
         "client_email": config('FIREBASE_CLIENT_EMAIL'),
         "client_id": config('FIREBASE_CLIENT_ID'),
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
