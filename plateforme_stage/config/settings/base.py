@@ -103,6 +103,9 @@ elif config('FIREBASE_PROJECT_ID', default=None):
     
     # Étape cruciale : Supprimer les vrais retours à la ligne qui cassent le PEM
     private_key = private_key.replace('\n', '').replace('\r', '').strip()
+    # Normaliser les tags (réparer "PRIVATE    KEY")
+    private_key = private_key.replace('BEGIN PRIVATE   KEY', 'BEGIN PRIVATE KEY')
+    private_key = private_key.replace('END PRIVATE   KEY', 'END PRIVATE KEY')
     # Rétablir les vrais sauts de ligne du format PEM via les séquences \n
     private_key = private_key.replace('\\n', '\n')
     
