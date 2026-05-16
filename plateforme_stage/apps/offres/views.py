@@ -6,29 +6,40 @@ from .models import OffreStage
 from apps.core.ai_services import AIService
 from apps.core.external_apis import ExternalOffersService
 
+from django.http import JsonResponse
+
 def liste_offres_view(request):
-    # Fetch local published offers
+    # Fetch local published offers ONLY (Super Fast)
     offres = OffreStage.objects.filter(statut='PUBLIEE').select_related('entreprise')
     
-    # Optional filtering for local offers
     domaine = request.GET.get('domaine')
     if domaine:
         offres = offres.filter(filieres_ciblees__nom__icontains=domaine)
         
-    # Fetch RapidAPI offers (External)
-    raw_rapid = ExternalOffersService.get_rapidapi_internships()
-    external_offers = [j for j in raw_rapid if isinstance(j, dict)][:20]
-    
-    # Fetch Open Web Ninja offers (External)
-    raw_ninja = ExternalOffersService.get_openwebninja_internships(query=domaine if domaine else "internship")
-    ninja_offers = [j for j in raw_ninja if isinstance(j, dict)][:20]
-    
     context = {
         'offres': offres,
-        'external_offers': external_offers,
-        'ninja_offers': ninja_offers,
+        # We don't fetch external here anymore to save time
     }
     return render(request, 'offres/liste_offres.html', context)
+
+def api_external_offers_view(request):
+    """
+    Async endpoint to fetch external jobs without blocking the main page.
+    """
+    domaine = request.GET.get('domaine')
+    
+    # Fetch RapidAPI
+    raw_rapid = ExternalOffersService.get_rapidapi_internships()
+    external_offers = [j for j in raw_rapid if isinstance(j, dict)][:15]
+    
+    # Fetch Ninja
+    raw_ninja = ExternalOffersService.get_openwebninja_internships(query=domaine if domaine else "internship")
+    ninja_offers = [j for j in raw_ninja if isinstance(j, dict)][:15]
+    
+    return JsonResponse({
+        'rapid': external_offers,
+        'ninja': ninja_offers
+    })
 
 @login_required
 def matching_ia_view(request):
