@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Sign In" %} | Internship Hub{% endblock %}
+
+{% block content %}
+<div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+    <div class="col-12 col-md-8 col-lg-5 animate-fade-in">
+        <div class="card border-0 shadow-lg p-4 p-md-5 rounded-5 bg-white">
+            <div class="text-center mb-5">
+                <div class="bg-primary-subtle d-inline-flex p-3 rounded-4 mb-3">
+                    <i class="bi bi-shield-lock-fill text-primary fs-2"></i>
+                </div>
+                <h2 class="fw-800 text-dark mb-1">{% trans "Welcome Back" %}</h2>
+                <p class="text-muted small">{% blocktrans %}Log in to your account to continue your journey.{% endblocktrans %}</p>
+            </div>
+
+            {% if socialaccount_providers %}
+                <p>{% blocktrans with site.name as site_name %}Please sign in with one
+                of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
+                for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
+
+                <div class="socialaccount_ballot">
+                    <ul class="socialaccount_providers">
+                        {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+                    </ul>
+                    <div class="login-or text-center my-4 border-bottom position-relative">
+                        <span class="bg-white px-3 position-absolute top-50 start-50 translate-middle text-muted small fw-bold">{% trans "OR" %}</span>
+                    </div>
+                </div>
+                {% include "socialaccount/snippets/login_extra.html" %}
+            {% endif %}
+
+            <form class="login" method="POST" action="{% url 'account_login' %}">
+                {% csrf_token %}
+                
+                {{ form|crispy }}
+                
+                {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                {% endif %}
+
+                <div class="d-grid gap-2 mt-4">
+                    <button class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm py-3" type="submit">
+                        {% trans "Sign In" %} <i class="bi bi-arrow-right-short ms-2"></i>
+                    </button>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a class="text-decoration-none small fw-bold text-primary" href="{% url 'account_reset_password' %}">
+                        {% trans "Forgot Password?" %}
+                    </a>
+                </div>
+            </form>
+
+            <hr class="my-5 opacity-5">
+
+            <div class="text-center">
+                <p class="mb-0 text-muted small">
+                    {% blocktrans %}Don't have an account?{% endblocktrans %}
+                    <a href="{{ signup_url }}" class="text-primary fw-bold text-decoration-none ms-1">{% trans "Create one now" %}</a>
+                </p>
+            </div>
+        </div>
+        
+        <p class="text-center mt-4 text-muted small opacity-50">
+            &copy; {% now "Y" %} Internship Management Platform. All rights reserved.
+        </p>
+    </div>
+</div>
+
+<style>
+    .fw-800 { font-weight: 800; }
+    /* Custom style to override crispy form controls for premium look */
+    .form-control {
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        font-weight: 500;
+    }
+    .form-control:focus {
+        background-color: #fff;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    .form-check-input:checked {
+        background-color: #6366f1;
+        border-color: #6366f1;
+    }
+</style>
+{% endblock %}
