@@ -48,9 +48,13 @@ def details_pfa_view(request, pfa_id):
     # 2. Get Messages from Firestore
     pfa_messages = []
     if db:
-        docs = db.collection('pfa_messages').where('pfa_id', '==', pfa.id).order_by('date_envoi').stream()
+        # Fetch without ordering to avoid FailedPrecondition (Index) error
+        docs = db.collection('pfa_messages').where('pfa_id', '==', pfa.id).stream()
         for doc in docs:
             pfa_messages.append(doc.to_dict())
+        
+        # Sort in Python by date_envoi
+        pfa_messages.sort(key=lambda x: x.get('date_envoi'))
 
     if request.method == 'POST':
         contenu = request.POST.get('contenu')
