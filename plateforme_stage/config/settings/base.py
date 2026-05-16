@@ -87,6 +87,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Initialize Firebase
 import firebase_admin
 from firebase_admin import credentials, firestore
+import re
+import dj_database_url
 
 firebase_key_path = BASE_DIR / 'firebase-key.json'
 
@@ -96,17 +98,17 @@ if firebase_key_path.exists():
     db_firestore = firestore.client()
 elif config('FIREBASE_PROJECT_ID', default=None):
     # Fallback for production using Env Vars
-    # Nettoyage ultra-robuste pour gérer les sauts de ligne physiques et les guillemets
+    # Nettoyage ultra-robuste avec REGEX pour gérer les sauts de ligne et espaces multiples
     private_key = config('FIREBASE_PRIVATE_KEY').strip()
     if private_key.startswith('"') and private_key.endswith('"'):
         private_key = private_key[1:-1]
     
-    # Étape cruciale : Supprimer les vrais retours à la ligne qui cassent le PEM
+    # 1. Supprimer les vrais retours à la ligne physiques
     private_key = private_key.replace('\n', '').replace('\r', '').strip()
-    # Normaliser les tags (réparer "PRIVATE    KEY")
-    private_key = private_key.replace('BEGIN PRIVATE   KEY', 'BEGIN PRIVATE KEY')
-    private_key = private_key.replace('END PRIVATE   KEY', 'END PRIVATE KEY')
-    # Rétablir les vrais sauts de ligne du format PEM via les séquences \n
+    # 2. Normaliser "PRIVATE   KEY" (espaces multiples) avec Regex
+    private_key = re.sub(r'BEGIN\s+PRIVATE\s+KEY', 'BEGIN PRIVATE KEY', private_key)
+    private_key = re.sub(r'END\s+PRIVATE\s+KEY', 'END PRIVATE KEY', private_key)
+    # 3. Rétablir les vrais sauts de ligne du format PEM via les séquences \n
     private_key = private_key.replace('\\n', '\n')
     
     firebase_info = {
@@ -129,20 +131,19 @@ else:
 
 # Database configuration
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DATABASE_NAME', default='plateforme_stage_db'),
-        'USER': config('DATABASE_USER', default='root'),
-        'PASSWORD': config('DATABASE_PASSWORD', default='Tipex2005.'),
-        'HOST': config('DATABASE_HOST', default='localhost'),
-        'PORT': config('DATABASE_PORT', default='3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
-    }
+    'default': dj_database_url.config(
+        default=f"mysql://{config('DATABASE_USER', default='root')}:{config('DATABASE_PASSWORD', default='Tipex2005.')}@{config('DATABASE_HOST', default='localhost')}:{config('DATABASE_PORT', default='3306')}/{config('DATABASE_NAME', default='plateforme_stage_db')}",
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
-# Fallback to SQLite for development if PostgreSQL is not available
+# Add STRICT_TRANS_TABLES for MySQL if using MySQL
+if DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['init_command'] = "SET sql_mode='STRICT_TRANS_TABLES'"
+
+# Fallback to SQLite for development if requested
 if config('USE_SQLITE', default=False, cast=bool):
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
