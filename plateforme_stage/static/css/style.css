@@ -38,12 +38,33 @@ body {
 
 /* Navbar Premium (Floating Glass) */
 .navbar {
-    background: var(--glass-bg) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--glass-border);
     padding: 0.75rem 0;
     transition: all 0.3s ease;
+    z-index: 1050; /* Ensure navbar is above other elements */
+}
+
+.dropdown-menu {
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 0.5rem;
+    z-index: 1100; /* Higher than navbar */
+}
+
+.dropdown-item {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.dropdown-item:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+    color: var(--primary-color);
 }
 
 .navbar-brand {
