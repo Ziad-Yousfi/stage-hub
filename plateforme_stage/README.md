@@ -1,246 +1,338 @@
-# Internship Management Platform (PFA & Internship Tracking)
+# 🎓 Plateforme Stage — Gestion des Stages & PFA
 
-A comprehensive Django web application for managing internship requests, offers, and tracking students in their End-of-Year Projects (PFA).
+Application web Django complète pour la gestion des stages académiques et des Projets de Fin d'Année (PFA) à l'EMSI.
 
-## 🎯 Features
+---
 
-### For Students
-- Submit internship applications
-- Track application status
-- Manage ongoing internships
-- Submit weekly reports
-- Track PFA progress with Kanban board
+## 🎯 Fonctionnalités par Rôle
 
-### For Companies
-- Publish internship offers
-- Review applications
-- Manage recruited interns
-- Communicate with students and teachers
+### 👨‍🎓 Étudiant
+- Parcourir et filtrer les offres de stage
+- Postuler (limite configurable, défaut : 5 candidatures)
+- Suivre le statut de ses candidatures en temps réel
+- Soumettre des rapports hebdomadaires d'avancement
+- Gérer son PFA via un tableau Kanban + vue Gantt
+- Sauvegarder des offres en favoris
 
-### For Teachers
-- Supervise internships
-- Validate weekly reports
-- Track PFA progress
-- Manage defense schedules
+### 🏢 Entreprise
+- Publier et gérer des offres de stage (CRUD complet)
+- Consulter et traiter les candidatures reçues
+- Communiquer avec les étudiants et enseignants via messagerie interne
+- Gérer les stagiaires accueillis
 
-### For Administrators
-- Full platform management
-- User management
-- Statistics and reporting
-- Export data to CSV/Excel
+### 👨‍🏫 Enseignant
+- Superviser les stages de ses étudiants
+- Valider les rapports hebdomadaires avec commentaires
+- Suivre l'avancement des PFA
+- Gérer les soutenances et les jurys
 
-## 🏗️ Tech Stack
+### 🛡️ Administrateur
+- Gestion complète de la plateforme
+- Gestion des utilisateurs et des rôles
+- Statistiques et reporting
+- Export des données (CSV/Excel via django-import-export)
+- Accès au panneau Django Admin
 
-- **Backend**: Django 4.2+ with Django REST Framework
-- **Database**: PostgreSQL (SQLite for development)
-- **Frontend**: Django Templates + Bootstrap 5 + Vanilla JavaScript
-- **Authentication**: Django Allauth (multi-role)
-- **File Storage**: Django Storages + Pillow
-- **Notifications**: In-app notifications + Email
-- **Charts**: Chart.js
+---
 
-## 📋 Installation
+## 🏗️ Stack Technique
 
-### Prerequisites
-- Python 3.9+
-- PostgreSQL 12+ (or SQLite for development)
-- Redis (optional, for Celery)
+| Composant | Technologie | Version |
+|-----------|-------------|---------|
+| Framework | Django | ≥ 4.2 |
+| API REST | Django REST Framework | ≥ 3.14 |
+| Auth | Django Allauth | ≥ 0.54 |
+| Base de données | MySQL (prod) / SQLite (dev) | — |
+| Temps réel | Firebase Firestore | — |
+| Frontend | Bootstrap 5 + Chart.js | — |
+| Formulaires | django-crispy-forms | ≥ 2.0 |
+| PDF | WeasyPrint | ≥ 59.0 |
+| IA | OpenAI API (GPT-4o / Azure) | ≥ 1.3.0 |
+| Tâches async | Celery + Redis | ≥ 5.3 / ≥ 4.6 |
+| Déploiement | Gunicorn + WhiteNoise | — |
+| Stockage | Django Storages (AWS S3 opt.) | ≥ 1.13 |
 
-### Step 1: Clone the Repository
-```bash
-git clone <repository-url>
-cd plateforme_stage
-```
+---
 
-### Step 2: Create Virtual Environment
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### Step 3: Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### Step 4: Configure Environment Variables
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-### Step 5: Setup Database
-```bash
-# For PostgreSQL (recommended)
-createdb plateforme_stage_db
-
-# Or use SQLite (development only)
-# Set USE_SQLITE=True in .env
-```
-
-### Step 6: Run Migrations
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### Step 7: Create Superuser
-```bash
-python manage.py createsuperuser
-```
-
-### Step 8: Load Initial Data (Optional)
-```bash
-python manage.py seed_data
-```
-
-### Step 9: Run Development Server
-```bash
-python manage.py runserver
-```
-
-Visit `http://localhost:8000` in your browser.
-
-## 📁 Project Structure
+## 📁 Architecture du Projet
 
 ```
 plateforme_stage/
-├── config/                  # Project configuration
+├── config/                     # Configuration du projet
 │   ├── settings/
-│   │   ├── base.py         # Base settings
-│   │   ├── development.py  # Dev settings
-│   │   └── production.py   # Prod settings
-│   ├── urls.py             # Main URL configuration
+│   │   ├── base.py             # Paramètres communs (Firebase, DB, Auth...)
+│   │   ├── development.py      # Paramètres de développement
+│   │   └── production.py       # Paramètres de production
+│   ├── urls.py                 # Routage principal
 │   ├── wsgi.py
 │   └── asgi.py
-├── apps/
-│   ├── accounts/           # User profiles & authentication
-│   ├── offres/             # Internship offers
-│   ├── candidatures/       # Applications
-│   ├── stages/             # Ongoing internships
-│   ├── pfa/                # End-of-Year Projects
-│   ├── dashboard/          # User dashboards
-│   ├── notifications/      # Notifications system
-│   └── core/               # Shared utilities
-├── templates/              # HTML templates
-├── static/                 # CSS, JS, images
-├── media/                  # Uploaded files
+│
+├── apps/                       # Applications Django
+│   ├── core/                   # Utilitaires partagés
+│   │   └── models.py           # Enums : UserRole, StageType, CandidatureStatus...
+│   │   └── mixins              # RoleRequiredMixin, RBAC
+│   │
+│   ├── accounts/               # Gestion des utilisateurs
+│   │   └── models.py           # UserProfile, Etudiant, Entreprise, Enseignant
+│   │
+│   ├── offres/                 # Offres de stage
+│   │   └── models.py           # OffreStage, Competence, Filiere, Favori
+│   │
+│   ├── candidatures/           # Candidatures
+│   │   └── models.py           # Candidature + workflow de statut
+│   │
+│   ├── stages/                 # Stages en cours
+│   │   └── models.py           # StageEnCours, VisiteTerrainRapport, MessageInterne
+│   │
+│   ├── pfa/                    # Projets de Fin d'Année
+│   │   └── models.py           # PFA, EtapePFA, ReunionSuivi, DocumentPFA, MessagePFA
+│   │
+│   ├── dashboard/              # Tableaux de bord (par rôle)
+│   └── notifications/          # Système de notifications in-app
+│
+├── templates/                  # Templates HTML
+├── static/                     # CSS, JS, images
+├── media/                      # Fichiers uploadés
+├── firebase-key.json           # Clé Firebase (ne pas commiter en prod !)
 ├── requirements.txt
-├── .env.example
-└── manage.py
+├── manage.py
+└── .env.example
 ```
 
-## 👥 User Roles
+---
 
-1. **Student (ETUDIANT)**: Browse offers, apply, track internships
-2. **Company (ENTREPRISE)**: Post offers, review applications
-3. **Teacher (ENSEIGNANT)**: Supervise, validate reports
-4. **Administrator (ADMIN)**: Full platform access
+## 👥 Rôles Utilisateurs
 
-## 🔐 Authentication
+| Rôle | Code | Description |
+|------|------|-------------|
+| Étudiant | `ETUDIANT` | Parcourir les offres, postuler, suivre son stage/PFA |
+| Entreprise | `ENTREPRISE` | Publier des offres, gérer les candidatures |
+| Enseignant | `ENSEIGNANT` | Encadrer, valider rapports, gérer jurys |
+| Administrateur | `ADMIN` | Accès complet à la plateforme |
 
-The platform uses Django Allauth for authentication with email-based login.
+---
 
-### Register a New Account
-1. Visit `/accounts/signup/`
-2. Choose your role (Student, Company, or Teacher)
-3. Fill in the required information
-4. Verify your email
+## 🔑 Variables d'Environnement
 
-### Login
-Visit `/accounts/login/` with your email and password.
-
-## 📊 Key Features
-
-### Internship Offers Module
-- CRUD operations for companies
-- Advanced filtering (type, duration, location, skills)
-- Full-text search
-- Save favorites
-- Share offers
-
-### Applications Module
-- One-click apply (if profile complete)
-- Application limit (configurable, default: 5)
-- Status tracking
-- Email notifications
-- Application history
-
-### Internship Tracking Module
-- Visual timeline
-- Weekly reports
-- Teacher validation
-- Automatic PDF generation
-- Internal messaging
-
-### PFA Management Module
-- Kanban board for tasks
-- Gantt chart view
-- Document versioning
-- Meeting tracking
-- Automatic supervisor assignment
-
-## 🔒 Security
-
-- Role-based access control (RBAC)
-- CSRF protection on all forms
-- File upload validation
-- Audit logging
-- Secure password hashing
-
-## 📧 Email Configuration
-
-Configure SMTP settings in `.env`:
+Copier `.env.example` vers `.env` et renseigner :
 
 ```env
+# Django
+SECRET_KEY=votre_cle_secrete_django
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Base de données (MySQL par défaut)
+DATABASE_USER=root
+DATABASE_PASSWORD=votre_mot_de_passe
+DATABASE_HOST=localhost
+DATABASE_PORT=3306
+DATABASE_NAME=plateforme_stage_db
+
+# SQLite (développement uniquement)
+USE_SQLITE=True
+
+# IA — GitHub/Azure OpenAI
+GITHUB_TOKEN=votre_token_github
+AI_MODEL=gpt-4o
+AI_ENDPOINT=https://models.inference.ai.azure.com
+
+# APIs externes
+RAPIDAPI_KEY=votre_cle_rapidapi
+RAPIDAPI_HOST=internships-api.p.rapidapi.com
+OPEN_WEB_NINJA_KEY=votre_cle_ninja
+
+# Firebase (si Firestore utilisé)
+FIREBASE_PROJECT_ID=...
+FIREBASE_PRIVATE_KEY=...
+FIREBASE_CLIENT_EMAIL=...
+
+# Email SMTP
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-password
+EMAIL_HOST_USER=votre@email.com
+EMAIL_HOST_PASSWORD=votre_mot_de_passe_app
+
+# AWS S3 (optionnel)
+USE_S3=False
 ```
 
-## 🚀 Deployment
+---
 
-### Production Settings
-1. Set `DEBUG=False` in `.env`
-2. Configure allowed hosts
-3. Use PostgreSQL database
-4. Set up Redis for Celery
-5. Configure S3 for file storage (optional)
-6. Set up SSL/HTTPS
+## 📋 Installation
 
-### Using Docker (Optional)
+### Prérequis
+- Python 3.9+
+- MySQL 8+ (ou SQLite pour le développement)
+- Redis (optionnel, pour Celery)
+
+### Étape par étape
+
 ```bash
-docker-compose up -d
+# 1. Cloner le dépôt
+git clone <url-du-repo>
+cd stage-hub-repo/plateforme_stage
+
+# 2. Créer l'environnement virtuel
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+# Linux / macOS
+source venv/bin/activate
+
+# 3. Installer les dépendances
+pip install -r requirements.txt
+
+# 4. Configurer les variables d'environnement
+copy .env.example .env   # Windows
+# cp .env.example .env   # Linux/macOS
+# Éditer .env selon votre environnement
+
+# 5. Appliquer les migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# 6. Créer un superutilisateur
+python manage.py createsuperuser
+
+# 7. Lancer le serveur de développement
+python manage.py runserver
 ```
 
-## 🧪 Testing
+Accès : **[http://localhost:8000](http://localhost:8000)**
+Admin : **[http://localhost:8000/admin/](http://localhost:8000/admin/)**
+
+---
+
+## 🔐 Authentification
+
+La plateforme utilise **Django Allauth** avec authentification par email.
+
+| URL | Description |
+|-----|-------------|
+| `/accounts/signup/` | Inscription (choix du rôle) |
+| `/accounts/login/` | Connexion |
+| `/accounts/logout/` | Déconnexion |
+| `/accounts/profile/` | Profil utilisateur |
+
+---
+
+## 📊 Modules Détaillés
+
+### 📋 Offres de Stage (`/offres/`)
+- CRUD complet pour les entreprises
+- Filtrage avancé : type de stage, durée, localisation, niveau, compétences
+- Recherche plein texte
+- Sauvegarde en favoris avec notes personnelles
+- Statuts : Brouillon → Publiée → Expirée / Pourvue
+
+### 📨 Candidatures (`/candidatures/`)
+- Candidature en un clic (si profil complet)
+- Limite paramétrable (défaut : **5 candidatures actives**)
+- Workflow de statut : En attente → Vue → Retenue → Acceptée / Refusée
+- Notifications email automatiques
+
+### 🗂️ Stages en Cours (`/stages/`)
+- Suivi visuel avec timeline
+- Rapports hebdomadaires structurés (tâches, difficultés, avancement %)
+- Validation par l'enseignant encadrant avec commentaires
+- Messagerie interne entre étudiant, enseignant et entreprise
+- Génération de PDF (convention, rapport final)
+
+### 🎓 PFA (`/pfa/`)
+- Tableau Kanban pour les étapes du projet
+- Vue Gantt (dates prévues vs réelles)
+- Versioning des documents (rapports, présentations)
+- Suivi des réunions avec compte-rendus et actions
+- Calcul automatique de la note finale : `40% encadrant + 60% jury`
+- Lien vers le code source GitHub
+
+---
+
+## 🔒 Sécurité
+
+- **RBAC** : Mixins de contrôle d'accès par rôle (`EtudiantRequiredMixin`, `EntrepriseRequiredMixin`...)
+- Protection **CSRF** sur tous les formulaires
+- Validation des fichiers uploadés (types, taille)
+- Hashage sécurisé des mots de passe (Django default)
+- Variables sensibles via `python-decouple`
+
+---
+
+## 🚀 Déploiement (Production)
+
+### Railway / Heroku
+
+```bash
+# Le Procfile est déjà configuré
+web: gunicorn config.wsgi --log-file -
+```
+
+### Checklist production
+
+```env
+DEBUG=False
+SECRET_KEY=<cle-forte-aleatoire>
+ALLOWED_HOSTS=votre-domaine.com
+USE_SQLITE=False  # Utiliser MySQL
+```
+
+```bash
+python manage.py collectstatic --noinput
+python manage.py migrate
+```
+
+### AWS S3 (stockage fichiers)
+```env
+USE_S3=True
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_STORAGE_BUCKET_NAME=...
+```
+
+---
+
+## 🧪 Tests
 
 ```bash
 python manage.py test
 ```
 
-## 📝 Admin Interface
+---
 
-Access the admin panel at `/admin/` with superuser credentials.
+## 📦 Dépendances Principales
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 📞 Support
-
-For issues and questions, please open an issue on GitHub.
+```
+Django>=4.2
+djangorestframework>=3.14
+django-allauth>=0.54
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+django-import-export>=3.2
+Pillow>=10.0
+python-decouple>=3.8
+psycopg2-binary>=2.9
+mysqlclient>=2.2.0
+WeasyPrint>=59.0
+django-storages>=1.13
+celery>=5.3
+redis>=4.6
+gunicorn>=21.2.0
+whitenoise>=6.5.0
+openai>=1.3.0
+PyPDF2>=3.0.0
+firebase-admin>=6.5.0
+dj-database-url>=2.1.0
+```
 
 ---
 
-**Built with Django ❤️**
+## 📄 Licence
+
+Projet académique — EMSI 2024-2025 — Tous droits réservés.
+
+---
+
+**Développé avec Django ❤️ par Ziad Yousfi — EMSI IIR 3ème année**
